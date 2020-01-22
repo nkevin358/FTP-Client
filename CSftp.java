@@ -13,77 +13,71 @@ import java.net.*;
 //
 
 
-public class CSftp
-{
+public class CSftp {
     static final int MAX_LEN = 255;
     static final int ARG_CNT = 2;
 
-    public static void main(String [] args)
-    {
-	byte cmdString[] = new byte[MAX_LEN];
+    public static void main(String [] args) {
+        byte cmdString[] = new byte[MAX_LEN];
 
-	// Get command line arguments and connected to FTP
-	// If the arguments are invalid or there aren't enough of them
-        // then exit.
+        // Get command line arguments and connected to FTP
+        // If the arguments are invalid or there aren't enough of them
+            // then exit.
 
-	if (args.length != ARG_CNT) {
-	    System.out.print("Usage: cmd ServerAddress ServerPort\n");
-	    return;
-	}
+        if (args.length != ARG_CNT) {
+            System.out.print("Usage: cmd ServerAddress ServerPort\n");
+            return;
+        }
 
-	try (
-            // Create a TCP socket and connect to host and port specified
-            Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
-            // Create the output writer and flush the buffer automatically
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        ) {
+            String hostName = args[0];
+            int portNumber = Integer.parseInt(args[1]);
 
+        try (
+                Socket socket = new Socket(hostName, portNumber);
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            ) {
+                for (int len = 1; len > 0;) {
+                System.out.print("csftp> ");
+                len = System.in.read(cmdString);
+                if (len <= 0)
+                    break;
 
-            for (int len = 1; len > 0;) {
-            System.out.print("csftp> ");
-            len = System.in.read(cmdString);
-            if (len <= 0)
-                break;
+                // Start processing the command here.
+                String input = new String(cmdString);
+                String[] inputWords = input.split(" ");
 
-            // Start processing the command here.
-            String input = new String(cmdString);
-            String[] inputWords = input.split(" ");
+                // USER
+                if (inputWords[0].equals("USER")) {
+                    writer.write(input + "\r\n");
+                    writer.flush();
+                }
 
-            // USER
-            if (inputWords[0].equals("USER")) {
-                System.out.println("user command");
-                writer.write(input + "\r\n");
-                writer.flush();
-                System.out.println("msg sent");
-            }
+                // PASS
+                else if (inputWords[0].equals("PASS")) {
+                    writer.write(input + "\r\n");
+                    writer.flush();
+                }
 
-            // PASS
-            else if (inputWords[0].equals("PASS")) {
-                System.out.println("pass command");
-                writer.write(input + "\r\n");
-                writer.flush();
-                System.out.println("msg sent");
-            }
+                // QUIT
+                //if () {
 
-            // QUIT
-            //if () {
+                //}
 
-            //}
+                //space in the 3rd index has a space
 
-            //space in the 3rd index has a space
-
-            else {
+                else {
                     System.out.println("900 Invalid command.");
                     break;
-            }
+                }
 
-            String fromServer = null;
+                String fromServer;
 
-            while ((fromServer = in.readLine()) != null) {
-                System.out.println("Server: " + fromServer);
-                //break;
-            }
+                in.readLine();
+                while ((fromServer = in.readLine()) != null) {
+                    System.out.println("Server: " + fromServer);
+                    break;
+                }
 	    }
 	} catch (IOException exception) {
 	    System.err.println("998 Input error while reading commands, terminating.");

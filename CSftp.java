@@ -91,6 +91,9 @@ public class CSftp {
 
                         // get
                         else if (command.equals("get")) {
+                            System.out.println("--> " + "PASV");
+                            writer.write("PASV\r\n");
+                            writer.flush();
                             // TODO
                             // Go into passive mode and call RETR
                             /*
@@ -130,7 +133,9 @@ public class CSftp {
                         String fromServer;
                         while ((fromServer = in.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
-                            break;
+
+                            if (fromServer.contains("331") || fromServer.contains("230") || fromServer.contains("221")) break;
+                            if (fromServer.contains("End")) break;
                         }
                     }
                 }

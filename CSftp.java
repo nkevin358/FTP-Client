@@ -35,84 +35,108 @@ public class CSftp {
         }
         String hostName = args[0];
 
-        try {
+        try(
             Socket socket = new Socket(hostName, portNumber);
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
+        )
+        {
+            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("<-- " + in.readLine());
 
             for (int len = 1; len > 0; ) {
                 System.out.print("csftp> ");
-                len = System.in.read(cmdString);
+                /*len = System.in.read(cmdString);
                 if (len <= 0)
-                    break;
+                    break;*/
 
                 // Start processing the command here.
-                String input = new String(cmdString);
+                String input = stdIn.readLine();
                 String[] inputWords = input.split(" ");
 
-                // Commands
+                if (inputWords.length == 0) {
+                    System.out.print("0x001 Invalid command test 1.");
+                } else {
+                    // User command
+                    String command = inputWords[0];
 
-                //  user
-                if (inputWords[0].equals("USER") || inputWords[0].equals("user")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                    if ((command.equals("user") || command.equals("pw") || command.equals("get") || command.equals("cd")) && inputWords.length != 2) {
+                        System.out.println("0x002 Incorrect number of arguments");
+                        continue;
+                    } else if ((command.equals("quit") || command.equals("features") || command.equals("dir")) && inputWords.length > 1) {
+                        System.out.println("0x002 Incorrect number of arguments");
+                        continue;
+                    } else {
+                        // Command Handling
 
-                // pass
-                else if (inputWords[0].equals("PASS") || inputWords[0].equals("pass")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        //  user
+                        if (command.equals("user")) {
+                            String ftpCMD = "USER " + inputWords[1];
+                            System.out.println("--> " + ftpCMD);
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                        }
 
-                // quit
-                else if (inputWords[0].equals("QUIT") || inputWords[0].equals("quit")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // pass
+                        else if (command.equals("pw")) {
+                            String ftpCMD = "PASS " + inputWords[1];
+                            System.out.println("--> " + ftpCMD);
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                        }
 
-                // pasv
-                else if (inputWords[0].equals("PASV") || inputWords[0].equals("pasv")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // quit
+                        else if (command.equals("quit")) {
+                            String ftpCMD = "QUIT";
+                            System.out.println("--> " + ftpCMD);
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                        }
 
-                // retr
-                else if (inputWords[0].equals("RETR") || inputWords[0].equals("retr")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // get
+                        else if (command.equals("get")) {
+                            // TODO
+                            // Go into passive mode and call RETR
+                            /*
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                            */
+                        }
 
-                //space in the 3rd index has a space ??
-                // feat
-                else if (inputWords[0].equals("FEAT") || inputWords[0].equals("feat")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // features
+                        else if (command.equals("features")) {
+                            String ftpCMD = "FEAT";
+                            System.out.println("--> " + ftpCMD);
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                        }
 
-                // cwd
-                else if (inputWords[0].equals("CWD") || inputWords[0].equals("cwd")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // cd
+                        else if (command.equals("cd")) {
+                            String ftpCMD = "CWD " + inputWords[1];
+                            System.out.println("--> " + ftpCMD);
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                        }
 
-                // list
-                else if (inputWords[0].equals("LIST") || inputWords[0].equals("list")) {
-                    writer.write(input + "\r\n");
-                    writer.flush();
-                }
+                        // dir
+                        else if (command.equals("dir")) {
+                            // TODO Passive mode
+                            /*
+                            writer.write(ftpCMD + "\r\n");
+                            writer.flush();
+                            */
+                        } else {
+                            System.out.println("0x001 Invalid command.");
+                            continue;
+                        }
 
-                else {
-                    System.out.println("0x001 Invalid command.");
-                    continue;
-                }
-
-                String fromServer;
-
-                while ((fromServer = in.readLine()) != null) {
-                    System.out.println("<-- " + fromServer);
-                    break;
+                        String fromServer;
+                        while ((fromServer = in.readLine()) != null) {
+                            System.out.println("<-- " + fromServer);
+                            break;
+                        }
+                    }
                 }
             }
         } catch (IOException exception) {

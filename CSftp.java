@@ -60,9 +60,24 @@ public class CSftp {
                 }
 
                 // QUIT
-                //if () {
+                else if (inputWords[0].equals("QUIT")) {
+                    writer.write(input + "\r\n");
+                    writer.flush();
+                }
 
-                //}
+                // PASV
+                else if (inputWords[0].equals("PASV")) {
+                    writer.write(input + "\r\n");
+                    writer.flush();
+                }
+
+                // RETR
+                else if (inputWords[0].equals("RETR")) {
+                    writer.write(input + "\r\n");
+                    writer.flush();
+                }
+
+
 
                 //space in the 3rd index has a space
 

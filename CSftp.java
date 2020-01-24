@@ -113,12 +113,12 @@ public class CSftp {
 
                         // dir
                         else if (command.equals("dir")) {
-                            // TODO Passive mode
-                            /*
-                            writer.write(ftpCMD + "\r\n");
+                            System.out.println("--> " + "PASV");
+                            writer.write("PASV\r\n");
                             writer.flush();
-                            */
-                        } else {
+                        }
+
+                        else {
                             System.out.println("0x001 Invalid command.");
                             continue;
                         }
@@ -128,11 +128,11 @@ public class CSftp {
                             System.out.println("<-- " + fromServer);
 
                             // for user, pw, quit, cd
-                            if (fromServer.contains("331") || fromServer.contains("230") || fromServer.contains("221"))
+                            if (command.equals("user") || command.equals("pw") || command.equals("quit") || command.equals("cd"))
                                 break;
 
                             // for features:
-                            if (fromServer.contains("End")) break;
+                            if (fromServer.contains("211 ")) break;
 
                             // for get:
                             if (fromServer.contains("227")) {
@@ -147,8 +147,16 @@ public class CSftp {
                                         PrintWriter writerB = new PrintWriter(socketB.getOutputStream(), true);
                                         BufferedReader inB = new BufferedReader(new InputStreamReader(socketB.getInputStream()));
                                 ) {
-                                    System.out.println("hello");
+                                    if (command.equals("dir")) {
+                                        System.out.println("--> " + "LIST");
+                                        writer.write("LIST\r\n");
+                                        writer.flush();
+                                    }
 
+                                    String fromServerB;
+                                    while ((fromServerB = inB.readLine()) != null) {
+                                        System.out.println("<-- " + fromServerB);
+                                    }
                                 } catch (IOException exception) {
                                     System.err.println("0xFFFE Input error while reading commands, terminating.");
                                 }

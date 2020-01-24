@@ -14,22 +14,54 @@ public class CSftp {
 
     static final int DEAFULT_PORT = 21;
 
-    public static Socket socketA = null;
+    public static Socket controlConnection = null;
 
-    public static BufferedReader Areader = null;
-    public static PrintWriter Awriter = null;
+    public static BufferedReader controlReader = null;
+    public static PrintWriter controlWriter = null;
 
+    // Closes connectiosn and program
     private static void quitConnection() throws IOException {
-        if (socketA != null){
-            socketA.close();
+
+        readResponse(controlReader);
+
+        if (controlConnection != null){
+            controlConnection.close();
         }
-        if (Areader != null){
-            Areader.close();
+        if (controlReader != null){
+            controlReader.close();
         }
-        if (Awriter != null){
-            Awriter.close();
+        if (controlWriter != null){
+            controlWriter.close();
         }
         System.exit(0);
+    }
+
+    // Reads reponse from server
+    private static void readResponse(BufferedReader reader) throws IOException {
+        try {
+            String fromServer;
+            while ((fromServer = reader.readLine()) != null) {
+                System.out.println("<-- " + fromServer);
+            }
+        }
+        catch (IOException e){
+            System.out.println("0xFFFD Control connection I/O error, closing control connection.");
+            System.exit(1);
+        }
+    }
+
+    // Create control Connection socket
+    private static void connectControl(String hostName, int portNumber){
+        try {
+            controlConnection = new Socket(hostName, portNumber);
+            controlConnection.setSoTimeout(20000);
+            controlWriter = new PrintWriter(controlConnection.getOutputStream(), true);
+            controlReader = new BufferedReader(new InputStreamReader(controlConnection.getInputStream()));
+        }
+        catch (Exception e){
+            System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
+            System.exit(1);
+        }
     }
 
     public static void main(String[] args) {
@@ -48,13 +80,12 @@ public class CSftp {
         if (args.length == 2) {
             portNumber = Integer.parseInt(args[1]);
         }
+
         try {
-            socketA = new Socket(hostName, portNumber);
-            Awriter = new PrintWriter(socketA.getOutputStream(), true);
-            Areader = new BufferedReader(new InputStreamReader(socketA.getInputStream()));
+            connectControl(hostName,portNumber);
 
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("<-- " + Areader.readLine());
+            System.out.println("<-- " + controlReader.readLine());
 
             for (int len = 1; len > 0; ) {
                 System.out.print("csftp> ");
@@ -72,6 +103,10 @@ public class CSftp {
                     // User command
                     String command = inputWords[0];
 
+                    if (command.equals("") || command.startsWith("#")){
+                        continue;
+                    }
+
                     if ((command.equals("user") || command.equals("pw") || command.equals("get") || command.equals("cd")) && inputWords.length != 2) {
                         System.out.println("0x002 Incorrect number of arguments");
                         continue;
@@ -85,55 +120,55 @@ public class CSftp {
                         if (command.equals("user")) {
                             String ftpCMD = "USER " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            Awriter.write(ftpCMD + "\r\n");
-                            Awriter.flush();
+                            controlWriter.write(ftpCMD + "\r\n");
+                            controlWriter.flush();
                         }
 
                         // pass
                         else if (command.equals("pw")) {
                             String ftpCMD = "PASS " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            Awriter.write(ftpCMD + "\r\n");
-                            Awriter.flush();
+                            controlWriter.write(ftpCMD + "\r\n");
+                            controlWriter.flush();
                         }
 
                         // quit
                         else if (command.equals("quit")) {
                             String ftpCMD = "QUIT";
                             System.out.println("--> " + ftpCMD);
-                            Awriter.write(ftpCMD + "\r\n");
-                            Awriter.flush();
+                            controlWriter.write(ftpCMD + "\r\n");
+                            controlWriter.flush();
                             quitConnection();
                         }
 
                         // get
                         else if (command.equals("get")) {
                             System.out.println("--> " + "PASV");
-                            Awriter.write("PASV\r\n");
-                            Awriter.flush();
+                            controlWriter.write("PASV\r\n");
+                            controlWriter.flush();
                         }
 
                         // features
                         else if (command.equals("features")) {
                             String ftpCMD = "FEAT";
                             System.out.println("--> " + ftpCMD);
-                            Awriter.write(ftpCMD + "\r\n");
-                            Awriter.flush();
+                            controlWriter.write(ftpCMD + "\r\n");
+                            controlWriter.flush();
                         }
 
                         // cd
                         else if (command.equals("cd")) {
                             String ftpCMD = "CWD " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            Awriter.write(ftpCMD + "\r\n");
-                            Awriter.flush();
+                            controlWriter.write(ftpCMD + "\r\n");
+                            controlWriter.flush();
                         }
 
                         // dir
                         else if (command.equals("dir")) {
                             System.out.println("--> " + "PASV");
-                            Awriter.write("PASV\r\n");
-                            Awriter.flush();
+                            controlWriter.write("PASV\r\n");
+                            controlWriter.flush();
                         }
 
                         else {
@@ -142,7 +177,7 @@ public class CSftp {
                         }
 
                         String fromServer;
-                        while ((fromServer = Areader.readLine()) != null) {
+                        while ((fromServer = controlReader.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
 
                             // for get:
@@ -159,8 +194,8 @@ public class CSftp {
                                 ) {
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");
-                                        Awriter.write("LIST\r\n");
-                                        Awriter.flush();
+                                        controlWriter.write("LIST\r\n");
+                                        controlWriter.flush();
 
                                         String fromServerB;
                                         while ((fromServerB = inB.readLine()) != null) {
@@ -170,8 +205,8 @@ public class CSftp {
                                     else if (command.equals("get")) {
                                         String ftpCMD = "RETR" + inputWords[1];
                                         System.out.println("--> " + ftpCMD);
-                                        Awriter.write("RETR " + inputWords[1] + "\r\n");
-                                        Awriter.flush();
+                                        controlWriter.write("RETR " + inputWords[1] + "\r\n");
+                                        controlWriter.flush();
 
                                         BufferedInputStream inputBuffer = new BufferedInputStream(socketB.getInputStream());
                                         BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));

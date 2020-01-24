@@ -12,6 +12,26 @@ public class CSftp {
     static final int MAX_LEN = 255;
     static final int ARG_CNT = 2;
 
+    static final int DEAFULT_PORT = 21;
+
+    public static Socket socketA = null;
+
+    public static BufferedReader Areader = null;
+    public static PrintWriter Awriter = null;
+
+    private static void quitConnection() throws IOException {
+        if (socketA != null){
+            socketA.close();
+        }
+        if (Areader != null){
+            Areader.close();
+        }
+        if (Awriter != null){
+            Awriter.close();
+        }
+        System.exit(0);
+    }
+
     public static void main(String[] args) {
         byte cmdString[] = new byte[MAX_LEN];
 
@@ -24,15 +44,17 @@ public class CSftp {
         }
 
         String hostName = args[0];
-        int portNumber = Integer.parseInt(args[1]);
+        int portNumber = DEAFULT_PORT;
+        if (args.length == 2) {
+            portNumber = Integer.parseInt(args[1]);
+        }
+        try {
+            socketA = new Socket(hostName, portNumber);
+            Awriter = new PrintWriter(socketA.getOutputStream(), true);
+            Areader = new BufferedReader(new InputStreamReader(socketA.getInputStream()));
 
-        try (
-                Socket socket = new Socket(hostName, portNumber);
-                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        ) {
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("<-- " + in.readLine());
+            System.out.println("<-- " + Areader.readLine());
 
             for (int len = 1; len > 0; ) {
                 System.out.print("csftp> ");
@@ -42,10 +64,10 @@ public class CSftp {
 
                 // Start processing the command here.
                 String input = stdIn.readLine();
-                String[] inputWords = input.split(" ");
+                String[] inputWords = input.split("\\s+");
 
                 if (inputWords.length == 0) {
-                    System.out.print("0x001 Invalid command test 1.");
+                    System.out.print("0x001 Invalid command.");
                 } else {
                     // User command
                     String command = inputWords[0];
@@ -63,54 +85,55 @@ public class CSftp {
                         if (command.equals("user")) {
                             String ftpCMD = "USER " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
+                            Awriter.write(ftpCMD + "\r\n");
+                            Awriter.flush();
                         }
 
                         // pass
                         else if (command.equals("pw")) {
                             String ftpCMD = "PASS " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
+                            Awriter.write(ftpCMD + "\r\n");
+                            Awriter.flush();
                         }
 
                         // quit
                         else if (command.equals("quit")) {
                             String ftpCMD = "QUIT";
                             System.out.println("--> " + ftpCMD);
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
+                            Awriter.write(ftpCMD + "\r\n");
+                            Awriter.flush();
+                            quitConnection();
                         }
 
                         // get
                         else if (command.equals("get")) {
                             System.out.println("--> " + "PASV");
-                            writer.write("PASV\r\n");
-                            writer.flush();
+                            Awriter.write("PASV\r\n");
+                            Awriter.flush();
                         }
 
                         // features
                         else if (command.equals("features")) {
                             String ftpCMD = "FEAT";
                             System.out.println("--> " + ftpCMD);
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
+                            Awriter.write(ftpCMD + "\r\n");
+                            Awriter.flush();
                         }
 
                         // cd
                         else if (command.equals("cd")) {
                             String ftpCMD = "CWD " + inputWords[1];
                             System.out.println("--> " + ftpCMD);
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
+                            Awriter.write(ftpCMD + "\r\n");
+                            Awriter.flush();
                         }
 
                         // dir
                         else if (command.equals("dir")) {
                             System.out.println("--> " + "PASV");
-                            writer.write("PASV\r\n");
-                            writer.flush();
+                            Awriter.write("PASV\r\n");
+                            Awriter.flush();
                         }
 
                         else {
@@ -119,7 +142,7 @@ public class CSftp {
                         }
 
                         String fromServer;
-                        while ((fromServer = in.readLine()) != null) {
+                        while ((fromServer = Areader.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
 
                             // for get:
@@ -136,8 +159,8 @@ public class CSftp {
                                 ) {
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");
-                                        writer.write("LIST\r\n");
-                                        writer.flush();
+                                        Awriter.write("LIST\r\n");
+                                        Awriter.flush();
 
                                         String fromServerB;
                                         while ((fromServerB = inB.readLine()) != null) {
@@ -147,8 +170,8 @@ public class CSftp {
                                     else if (command.equals("get")) {
                                         String ftpCMD = "RETR" + inputWords[1];
                                         System.out.println("--> " + ftpCMD);
-                                        writer.write("RETR " + inputWords[1] + "\r\n");
-                                        writer.flush();
+                                        Awriter.write("RETR " + inputWords[1] + "\r\n");
+                                        Awriter.flush();
 
                                         BufferedInputStream inputBuffer = new BufferedInputStream(socketB.getInputStream());
                                         BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));

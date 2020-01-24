@@ -1,11 +1,6 @@
 
-import java.lang.System;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.PrintStream;
-import java.net.Socket;
 import java.io.*;
-import java.net.*;
+import java.net.Socket;
 
 //
 // This is an implementation of a simplified version of a command 
@@ -127,13 +122,6 @@ public class CSftp {
                         while ((fromServer = in.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
 
-                            // for user, pw, quit, cd
-                            if (command.equals("user") || command.equals("pw") || command.equals("quit") || command.equals("cd"))
-                                break;
-
-                            // for features:
-                            if (fromServer.contains("211 ")) break;
-
                             // for get:
                             if (fromServer.contains("227")) {
                                 String IP_Address = fromServer.split("[\\(\\)]")[1];
@@ -144,24 +132,44 @@ public class CSftp {
 
                                 try (
                                         Socket socketB = new Socket(hostNameB, portNumberB);
-                                        PrintWriter writerB = new PrintWriter(socketB.getOutputStream(), true);
                                         BufferedReader inB = new BufferedReader(new InputStreamReader(socketB.getInputStream()));
                                 ) {
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");
                                         writer.write("LIST\r\n");
                                         writer.flush();
-                                    }
 
-                                    String fromServerB;
-                                    while ((fromServerB = inB.readLine()) != null) {
-                                        System.out.println("<-- " + fromServerB);
+                                        String fromServerB;
+                                        while ((fromServerB = inB.readLine()) != null) {
+                                            System.out.println(fromServerB);
+                                        }
+                                    }
+                                    else if (command.equals("get")) {
+                                        String ftpCMD = "RETR" + inputWords[1];
+                                        System.out.println("--> " + ftpCMD);
+                                        writer.write("RETR " + inputWords[1] + "\r\n");
+                                        writer.flush();
+
+                                        BufferedInputStream inputBuffer = new BufferedInputStream(socketB.getInputStream());
+                                        BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
+
+                                        byte[] buffer = new byte[4096];
+                                        int bytesRead = 0;
+
+                                        // readAllBytes
+                                        while ((bytesRead = inputBuffer.read(buffer)) != -1) {
+                                            outputBuffer.write(bytesRead);
+                                        }
                                     }
                                 } catch (IOException exception) {
+                                    exception.printStackTrace();
                                     System.err.println("0xFFFE Input error while reading commands, terminating.");
                                 }
-                                break;
                             }
+
+                            // for features:
+                            char[] toCharArray = fromServer.toCharArray();
+                            if (toCharArray[3] == ' ') break;
                         }
                     }
                 }

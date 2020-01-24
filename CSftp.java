@@ -31,12 +31,11 @@ public class CSftp {
         String hostName = args[0];
         int portNumber = Integer.parseInt(args[1]);
 
-        try(
-            Socket socket = new Socket(hostName, portNumber);
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        )
-        {
+        try (
+                Socket socket = new Socket(hostName, portNumber);
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        ) {
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("<-- " + in.readLine());
 
@@ -94,12 +93,6 @@ public class CSftp {
                             System.out.println("--> " + "PASV");
                             writer.write("PASV\r\n");
                             writer.flush();
-                            // TODO
-                            // Go into passive mode and call RETR
-                            /*
-                            writer.write(ftpCMD + "\r\n");
-                            writer.flush();
-                            */
                         }
 
                         // features
@@ -134,8 +127,33 @@ public class CSftp {
                         while ((fromServer = in.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
 
-                            if (fromServer.contains("331") || fromServer.contains("230") || fromServer.contains("221")) break;
+                            // for user, pw, quit, cd
+                            if (fromServer.contains("331") || fromServer.contains("230") || fromServer.contains("221"))
+                                break;
+
+                            // for features:
                             if (fromServer.contains("End")) break;
+
+                            // for get:
+                            if (fromServer.contains("227")) {
+                                String IP_Address = fromServer.split("[\\(\\)]")[1];
+                                String[] nums = IP_Address.split(",");
+
+                                String hostNameB = nums[0] + "." + nums[1] + "." + nums[2] + "." + nums[3];
+                                int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
+
+                                try (
+                                        Socket socketB = new Socket(hostNameB, portNumberB);
+                                        PrintWriter writerB = new PrintWriter(socketB.getOutputStream(), true);
+                                        BufferedReader inB = new BufferedReader(new InputStreamReader(socketB.getInputStream()));
+                                ) {
+                                    System.out.println("hello");
+
+                                } catch (IOException exception) {
+                                    System.err.println("0xFFFE Input error while reading commands, terminating.");
+                                }
+                                break;
+                            }
                         }
                     }
                 }

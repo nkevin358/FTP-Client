@@ -21,7 +21,7 @@ public class CSftp {
     public static BufferedReader dataReader = null;
     public static PrintWriter controlWriter = null;
 
-    // Closes connectiosn and program
+    // Closes connections and program
     private static void quitConnection() throws IOException {
 
         if (controlConnection != null){
@@ -41,7 +41,6 @@ public class CSftp {
         }
         System.exit(0);
     }
-
     // Reads reponse from Control Connection
     private static void readControl() throws IOException {
         try {
@@ -110,7 +109,7 @@ public class CSftp {
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("<-- " + controlReader.readLine());
 
-            for (int len = 1; len > 0; ) {
+            for (int len = 1; len > 0;) {
                 System.out.print("csftp> ");
                 /*len = System.in.read(cmdString);
                 if (len <= 0)
@@ -160,7 +159,7 @@ public class CSftp {
                             String ftpCMD = "QUIT";
                             writeControl(ftpCMD);
                             readControl();
-                            continue;
+                            quitConnection();
                         }
 
                         // get
@@ -224,8 +223,16 @@ public class CSftp {
                                         controlWriter.flush();
 
                                         String fromServerB;
-                                        while ((fromServerB = dataReader.readLine()) != null) {
-                                            System.out.println(fromServerB);
+                                        while ((fromServer = controlReader.readLine()) != null) {
+                                            System.out.println("<-- " + fromServer);
+
+                                            if (dataReader.readLine() == null) {
+                                                break;
+                                            }
+
+                                            while ((fromServerB = dataReader.readLine()) != null) {
+                                                System.out.println(fromServerB);
+                                            }
                                         }
                                     }
                                     else if (command.equals("get")) {
@@ -240,9 +247,17 @@ public class CSftp {
                                         byte[] buffer = new byte[4096];
                                         int bytesRead = 0;
 
-                                        // readAllBytes
-                                        while ((bytesRead = inputBuffer.read(buffer)) != -1) {
-                                            outputBuffer.write(bytesRead);
+                                        while ((fromServer = controlReader.readLine()) != null) {
+                                            System.out.println("<-- " + fromServer);
+
+                                            if (dataReader.readLine() == null) {
+                                                break;
+                                            }
+
+                                            // readAllBytes
+                                            while ((bytesRead = inputBuffer.read(buffer)) != -1) {
+                                                outputBuffer.write(bytesRead);
+                                            }
                                         }
                                     }
                                 } catch (IOException exception) {

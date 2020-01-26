@@ -236,7 +236,7 @@ public class CSftp {
                                         }
                                     }
                                     else if (command.equals("get")) {
-                                        String ftpCMD = "RETR" + inputWords[1];
+                                        String ftpCMD = "RETR " + inputWords[1];
                                         System.out.println("--> " + ftpCMD);
                                         controlWriter.write("RETR " + inputWords[1] + "\r\n");
                                         controlWriter.flush();
@@ -244,20 +244,19 @@ public class CSftp {
                                         BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
                                         BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
 
-                                        byte[] buffer = new byte[4096];
-                                        int bytesRead = 0;
+                                        byte[] allBytes = inputBuffer.readAllBytes();
 
                                         while ((fromServer = controlReader.readLine()) != null) {
                                             System.out.println("<-- " + fromServer);
 
-                                            if (dataReader.readLine() == null) {
-                                                break;
+                                            if (allBytes != null) {
+                                                outputBuffer.write(allBytes);
                                             }
 
-                                            // readAllBytes
-                                            while ((bytesRead = inputBuffer.read(buffer)) != -1) {
-                                                outputBuffer.write(bytesRead);
-                                            }
+                                            inputBuffer.close();
+                                            outputBuffer.close();
+
+                                            if (fromServer.startsWith("226")) break;
                                         }
                                     }
                                 } catch (IOException exception) {

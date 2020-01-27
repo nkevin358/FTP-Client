@@ -41,8 +41,8 @@ public class CSftp {
         }
         System.exit(0);
     }
-    // Reads reponse from Control Connection
-    private static void readControl() throws IOException {
+    // Reads response from Control Connection
+    private static void readControl() {
         try {
             String fromServer;
             while ((fromServer = controlReader.readLine()) != null) {
@@ -60,7 +60,7 @@ public class CSftp {
     }
 
     // Write response to Control Connection
-    private static void writeControl(String cmd) throws IOException {
+    private static void writeControl(String cmd) {
         try {
             System.out.println("--> " + cmd);
             controlWriter.write(cmd + "\r\n");
@@ -129,10 +129,10 @@ public class CSftp {
                     }
 
                     if ((command.equals("user") || command.equals("pw") || command.equals("get") || command.equals("cd")) && inputWords.length != 2) {
-                        System.out.println("0x002 Incorrect number of arguments");
+                        System.out.println("0x002 Incorrect number of arguments.");
                         continue;
                     } else if ((command.equals("quit") || command.equals("features") || command.equals("dir")) && inputWords.length > 1) {
-                        System.out.println("0x002 Incorrect number of arguments");
+                        System.out.println("0x002 Incorrect number of arguments.");
                         continue;
                     } else {
                         // Command Handling
@@ -236,21 +236,24 @@ public class CSftp {
                                         controlWriter.write("RETR " + inputWords[1] + "\r\n");
                                         controlWriter.flush();
 
-                                        BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
-                                        BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
+                                        try {
+                                            BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
+                                            BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
+                                            byte[] allBytes = inputBuffer.readAllBytes();
 
-                                        byte[] allBytes = inputBuffer.readAllBytes();
+                                            while ((fromServer = controlReader.readLine()) != null) {
+                                                System.out.println("<-- " + fromServer);
 
-                                        while ((fromServer = controlReader.readLine()) != null) {
-                                            System.out.println("<-- " + fromServer);
-
-                                            if (allBytes != null) {
-                                                outputBuffer.write(allBytes);
+                                                if (allBytes != null) {
+                                                    outputBuffer.write(allBytes);
+                                                }
+                                                if (fromServer.startsWith("226")) break;
                                             }
-                                            if (fromServer.startsWith("226")) break;
+                                            inputBuffer.close();
+                                            outputBuffer.close();
+                                        } catch (IOException exception) {
+                                            System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
                                         }
-                                        inputBuffer.close();
-                                        outputBuffer.close();
                                     }
                                 } catch (IOException exception) {
                                     exception.printStackTrace();

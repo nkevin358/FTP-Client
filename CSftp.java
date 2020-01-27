@@ -226,13 +226,11 @@ public class CSftp {
                                         while ((fromServer = controlReader.readLine()) != null) {
                                             System.out.println("<-- " + fromServer);
 
-                                            if (dataReader.readLine() == null) {
-                                                break;
-                                            }
-
                                             while ((fromServerB = dataReader.readLine()) != null) {
                                                 System.out.println(fromServerB);
                                             }
+
+                                            if (fromServer.startsWith("226")) break;
                                         }
                                     }
                                     else if (command.equals("get")) {
@@ -243,19 +241,23 @@ public class CSftp {
 
                                         try {
                                             BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
-                                            BufferedOutputStream outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
+                                            BufferedOutputStream outputBuffer = null;
                                             byte[] allBytes = inputBuffer.readAllBytes();
 
                                             while ((fromServer = controlReader.readLine()) != null) {
                                                 System.out.println("<-- " + fromServer);
 
                                                 if (allBytes != null) {
+                                                    outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
                                                     outputBuffer.write(allBytes);
                                                 }
+
                                                 if (fromServer.startsWith("226")) break;
                                             }
                                             inputBuffer.close();
-                                            outputBuffer.close();
+                                            if (outputBuffer != null) {
+                                                outputBuffer.close();
+                                            }
                                         } catch (IOException exception) {
                                             readControl();
                                             System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
@@ -266,6 +268,9 @@ public class CSftp {
                                     System.exit(1);
                                 }
                             }
+
+                            char[] toCharArray = fromServer.toCharArray();
+                            if (toCharArray[3] == ' ') break;
                         }
                     }
                 }

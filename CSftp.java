@@ -143,7 +143,6 @@ public class CSftp {
                         continue;
                     } else {
                         // Command Handling
-
                         //  user
                         if (command.equals("user")) {
                             String ftpCMD = "USER " + inputWords[1];
@@ -262,7 +261,6 @@ public class CSftp {
                                         }
                                     }
                                 } catch (IOException exception) {
-                                    exception.printStackTrace();
                                     System.err.println("0xFFFE Input error while reading commands, terminating.");
                                 }
                             }
@@ -276,7 +274,7 @@ public class CSftp {
                 }
             }
         } catch (IOException exception) {
-            System.err.println("0xFFFE Input error while reading commands, terminating.");
+            System.err.println("0xFFFF Processing error. " + exception);
         }
     }
 }

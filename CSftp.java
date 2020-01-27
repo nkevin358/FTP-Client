@@ -215,7 +215,7 @@ public class CSftp {
                                 int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
                                 try {
-                                    connectDataTransfer(hostName, portNumberB);
+                                    connectDataTransfer(hostNameB, portNumberB);
 
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");

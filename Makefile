@@ -5,7 +5,7 @@ CSftp.jar: CSftp.java
 
 
 run: CSftp.jar  
-	java -jar CSftp.jar ftp.gnu.org 21  
+	java -jar CSftp.jar localhost 55555
 
 clean:
 	rm -f *.class

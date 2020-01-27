@@ -105,7 +105,6 @@ public class CSftp {
 
         try {
             connectControl(hostName,portNumber);
-
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("<-- " + controlReader.readLine());
 
@@ -210,12 +209,12 @@ public class CSftp {
                                 int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
                                 try {
-                                    if (dataConnection == null) {
+                                    //if (dataConnection == null) {
                                         dataConnection = new Socket(hostNameB, portNumberB);
-                                    }
-                                    if (dataReader == null) {
+                                    //}
+                                    //if (dataReader == null) {
                                         dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
-                                    }
+                                    //}
 
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");
@@ -252,12 +251,10 @@ public class CSftp {
                                             if (allBytes != null) {
                                                 outputBuffer.write(allBytes);
                                             }
-
-                                            inputBuffer.close();
-                                            outputBuffer.close();
-
                                             if (fromServer.startsWith("226")) break;
                                         }
+                                        inputBuffer.close();
+                                        outputBuffer.close();
                                     }
                                 } catch (IOException exception) {
                                     exception.printStackTrace();

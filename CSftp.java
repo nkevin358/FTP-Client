@@ -52,8 +52,7 @@ public class CSftp {
                 char[] toCharArray = fromServer.toCharArray();
                 if (toCharArray[3] == ' ') break;
             }
-        }
-        catch (IOException e){
+        } catch (IOException e){
             System.out.println("0xFFFD Control connection I/O error, closing control connection.");
             System.exit(1);
         }
@@ -65,24 +64,32 @@ public class CSftp {
             System.out.println("--> " + cmd);
             controlWriter.write(cmd + "\r\n");
             controlWriter.flush();
-        }
-        catch (Exception e){
+        } catch (Exception e){
             System.out.println("0xFFFD Control connection I/O error, closing control connection.");
             System.exit(1);
         }
     }
 
     // Create control Connection socket
-    private static void connectControl(String hostName, int portNumber){
+    private static void connectControl(String hostName, int portNumber) {
         try {
             controlConnection = new Socket(hostName, portNumber);
             controlConnection.setSoTimeout(20000);
             controlWriter = new PrintWriter(controlConnection.getOutputStream(), true);
             controlReader = new BufferedReader(new InputStreamReader(controlConnection.getInputStream()));
-        }
-        catch (Exception e){
+        } catch (IOException e){
             System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
             System.exit(1);
+        }
+    }
+
+    private static void connectDataTransfer(String hostName, int portNumber) {
+        try {
+            dataConnection = new Socket(hostName, portNumber);
+            dataConnection.setSoTimeout(10000);
+            dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
+        } catch (IOException e) {
+            System.out.println("0x3A2 Data transfer connection to " + hostName + " on port" + portNumber + " failed to open");
         }
     }
 
@@ -209,8 +216,7 @@ public class CSftp {
                                 int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
                                 try {
-                                    dataConnection = new Socket(hostNameB, portNumberB);
-                                    dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
+                                    connectDataTransfer(hostName, portNumberB);
 
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");

@@ -123,16 +123,23 @@ public class CSftp {
                     break;*/
 
                 // Start processing the command here.
-                String input = stdIn.readLine();
-                String[] inputWords = input.split("\\s+");
+                String input = null;
+                String[] inputWords = null;
+                try {
+                    input = stdIn.readLine();
+                    inputWords = input.split("\\s+");
+                } catch (IOException exception) {
+                    System.err.println("0xFFFE Input error while reading commands, terminating.");
+                    System.exit(1);
+                }
 
                 if (inputWords.length == 0) {
-                    System.out.print("0x001 Invalid command.");
+                    System.out.println("0x001 Invalid command.");
                 } else {
                     // User command
                     String command = inputWords[0];
 
-                    if (command.equals("") || command.startsWith("#")) {
+                    if (input.equals("") || input.startsWith("#")) {
                         continue;
                     }
 
@@ -267,8 +274,8 @@ public class CSftp {
                                         }
                                     }
                                 } catch (IOException exception) {
-                                    System.err.println("0xFFFE Input error while reading commands, terminating.");
-                                    System.exit(1);
+                                    // TODO: add 0x3A7 here I think
+
                                 }
                             }
 

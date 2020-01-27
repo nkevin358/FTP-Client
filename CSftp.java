@@ -209,12 +209,8 @@ public class CSftp {
                                 int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
                                 try {
-                                    //if (dataConnection == null) {
-                                        dataConnection = new Socket(hostNameB, portNumberB);
-                                    //}
-                                    //if (dataReader == null) {
-                                        dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
-                                    //}
+                                    dataConnection = new Socket(hostNameB, portNumberB);
+                                    dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
 
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");

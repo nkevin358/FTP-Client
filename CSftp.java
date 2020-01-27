@@ -274,8 +274,11 @@ public class CSftp {
                                         }
                                     }
                                 } catch (IOException exception) {
-                                    // TODO: add 0x3A7 here I think
-
+                                    readControl();
+                                    System.err.println("0x3A7 Data transfer connection I/O error, closing data connection.");
+                                    dataReader.close();
+                                    dataConnection.close();
+                                    continue;
                                 }
                             }
 

@@ -99,7 +99,7 @@ public class CSftp {
         // Get command line arguments and connected to FTP
         // If the arguments are invalid or there aren't enough of them
         // then exit.
-        if (args.length != ARG_CNT) {
+        if (args.length <= 0 || args.length > 2) {
             System.out.print("Usage: cmd ServerAddress ServerPort\n");
             return;
         }
@@ -257,6 +257,7 @@ public class CSftp {
                                             inputBuffer.close();
                                             outputBuffer.close();
                                         } catch (IOException exception) {
+                                            readControl();
                                             System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
                                         }
                                     }

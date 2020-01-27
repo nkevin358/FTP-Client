@@ -24,23 +24,24 @@ public class CSftp {
     // Closes connections and program
     private static void quitConnection() throws IOException {
 
-        if (controlConnection != null){
+        if (controlConnection != null) {
             controlConnection.close();
         }
-        if (controlReader != null){
+        if (controlReader != null) {
             controlReader.close();
         }
-        if (controlWriter != null){
+        if (controlWriter != null) {
             controlWriter.close();
         }
-        if (dataConnection != null){
+        if (dataConnection != null) {
             dataConnection.close();
         }
-        if (dataReader != null){
+        if (dataReader != null) {
             dataReader.close();
         }
         System.exit(0);
     }
+
     // Reads response from Control Connection
     private static void readControl() {
         try {
@@ -52,7 +53,7 @@ public class CSftp {
                 char[] toCharArray = fromServer.toCharArray();
                 if (toCharArray[3] == ' ') break;
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("0xFFFD Control connection I/O error, closing control connection.");
             System.exit(1);
         }
@@ -64,7 +65,7 @@ public class CSftp {
             System.out.println("--> " + cmd);
             controlWriter.write(cmd + "\r\n");
             controlWriter.flush();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("0xFFFD Control connection I/O error, closing control connection.");
             System.exit(1);
         }
@@ -77,7 +78,7 @@ public class CSftp {
             controlConnection.setSoTimeout(20000);
             controlWriter = new PrintWriter(controlConnection.getOutputStream(), true);
             controlReader = new BufferedReader(new InputStreamReader(controlConnection.getInputStream()));
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
             System.exit(1);
         }
@@ -111,11 +112,11 @@ public class CSftp {
         }
 
         try {
-            connectControl(hostName,portNumber);
+            connectControl(hostName, portNumber);
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("<-- " + controlReader.readLine());
 
-            for (int len = 1; len > 0;) {
+            for (int len = 1; len > 0; ) {
                 System.out.print("csftp> ");
                 /*len = System.in.read(cmdString);
                 if (len <= 0)
@@ -131,7 +132,7 @@ public class CSftp {
                     // User command
                     String command = inputWords[0];
 
-                    if (command.equals("") || command.startsWith("#")){
+                    if (command.equals("") || command.startsWith("#")) {
                         continue;
                     }
 
@@ -195,9 +196,7 @@ public class CSftp {
                             System.out.println("--> " + "PASV");
                             controlWriter.write("PASV\r\n");
                             controlWriter.flush();
-                        }
-
-                        else {
+                        } else {
                             System.out.println("0x001 Invalid command.");
                             continue;
                         }
@@ -205,6 +204,11 @@ public class CSftp {
                         String fromServer;
                         while ((fromServer = controlReader.readLine()) != null) {
                             System.out.println("<-- " + fromServer);
+
+                            System.out.println("--> TYPE I");
+                            controlWriter.write("TYPE I\r\n");
+                            controlWriter.flush();
+                            System.out.println("<-- " + controlReader.readLine());
 
                             // for get:
                             if (fromServer.contains("227")) {
@@ -232,8 +236,7 @@ public class CSftp {
 
                                             if (fromServer.startsWith("226")) break;
                                         }
-                                    }
-                                    else if (command.equals("get")) {
+                                    } else if (command.equals("get")) {
                                         String ftpCMD = "RETR " + inputWords[1];
                                         System.out.println("--> " + ftpCMD);
                                         controlWriter.write("RETR " + inputWords[1] + "\r\n");

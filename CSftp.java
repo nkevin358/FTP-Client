@@ -263,19 +263,16 @@ public class CSftp {
                                     }
                                 } catch (IOException exception) {
                                     System.err.println("0xFFFE Input error while reading commands, terminating.");
+                                    System.exit(1);
                                 }
                             }
-
-                            // for features:
-                            char[] toCharArray = fromServer.toCharArray();
-                            if (toCharArray[3] == ' ') break;
-
                         }
                     }
                 }
             }
         } catch (IOException exception) {
             System.err.println("0xFFFF Processing error. " + exception);
+            System.exit(1);
         }
     }
 }

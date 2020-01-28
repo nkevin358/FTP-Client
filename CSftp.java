@@ -118,6 +118,8 @@ public class CSftp {
 
                 String input = null;
                 String[] inputWords = null;
+                String fromServer;
+
                 try {
                     input = stdIn.readLine();
                     inputWords = input.split("\\s+");
@@ -170,9 +172,9 @@ public class CSftp {
 
                         // get
                         else if (command.equals("get")) {
-                            System.out.println("--> " + "PASV");
                             controlWriter.write("PASV\r\n");
                             controlWriter.flush();
+
                         }
 
                         // features
@@ -193,7 +195,6 @@ public class CSftp {
 
                         // dir
                         else if (command.equals("dir")) {
-                            System.out.println("--> " + "PASV");
                             controlWriter.write("PASV\r\n");
                             controlWriter.flush();
                         } else {
@@ -201,80 +202,89 @@ public class CSftp {
                             continue;
                         }
 
-                        String fromServer;
                         while ((fromServer = controlReader.readLine()) != null) {
-                            System.out.println("<-- " + fromServer);
 
-                            System.out.println("--> TYPE I");
-                            controlWriter.write("TYPE I\r\n");
-                            controlWriter.flush();
-                            System.out.println("<-- " + controlReader.readLine());
 
-                            // for dir and get to create data transfer connection socket
-                            if (fromServer.contains("227")) {
-                                String IP_Address = fromServer.split("[\\(\\)]")[1];
-                                String[] nums = IP_Address.split(",");
+                            // check that user has logged in before allowing commands: get, dir
+                            if (fromServer.startsWith("530")) {
+                                System.out.println("<-- " + fromServer);
+                                break;
+                            } else {
+                                System.out.println("--> " + "PASV");
+                                System.out.println("<-- " + fromServer);
 
-                                String hostNameB = nums[0] + "." + nums[1] + "." + nums[2] + "." + nums[3];
-                                int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
-                                try {
-                                    connectDataTransfer(hostNameB, portNumberB);
+                                System.out.println("--> TYPE I");
+                                controlWriter.write("TYPE I\r\n");
+                                controlWriter.flush();
+                                System.out.println("<-- " + controlReader.readLine());
 
-                                    // dir
-                                    if (command.equals("dir")) {
-                                        System.out.println("--> " + "LIST");
-                                        controlWriter.write("LIST\r\n");
-                                        controlWriter.flush();
+                                // for dir and get to create data transfer connection socket
+                                if (fromServer.contains("227")) {
+                                    String IP_Address = fromServer.split("[\\(\\)]")[1];
+                                    String[] nums = IP_Address.split(",");
 
-                                        String fromServerB;
-                                        while ((fromServer = controlReader.readLine()) != null) {
-                                            System.out.println("<-- " + fromServer);
+                                    String hostNameB = nums[0] + "." + nums[1] + "." + nums[2] + "." + nums[3];
+                                    int portNumberB = Integer.parseInt(nums[4]) * 256 + Integer.parseInt(nums[5]);
 
-                                            while ((fromServerB = dataReader.readLine()) != null) {
-                                                System.out.println(fromServerB);
-                                            }
+                                    try {
+                                        connectDataTransfer(hostNameB, portNumberB);
 
-                                            if (fromServer.startsWith("226")) break;
-                                        }
-                                    }
-                                    // get
-                                    else if (command.equals("get")) {
-                                        String ftpCMD = "RETR " + inputWords[1];
-                                        System.out.println("--> " + ftpCMD);
-                                        controlWriter.write("RETR " + inputWords[1] + "\r\n");
-                                        controlWriter.flush();
+                                        // dir
+                                        if (command.equals("dir")) {
+                                            System.out.println("--> " + "LIST");
+                                            controlWriter.write("LIST\r\n");
+                                            controlWriter.flush();
 
-                                        try {
-                                            BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
-                                            BufferedOutputStream outputBuffer = null;
-                                            byte[] allBytes = inputBuffer.readAllBytes();
-
+                                            String fromServerB;
                                             while ((fromServer = controlReader.readLine()) != null) {
                                                 System.out.println("<-- " + fromServer);
 
-                                                if (allBytes != null) {
-                                                    outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
-                                                    outputBuffer.write(allBytes);
+                                                while ((fromServerB = dataReader.readLine()) != null) {
+                                                    System.out.println(fromServerB);
                                                 }
 
                                                 if (fromServer.startsWith("226")) break;
                                             }
-                                            inputBuffer.close();
-                                            if (outputBuffer != null) {
-                                                outputBuffer.close();
-                                            }
-                                        } catch (IOException exception) {
-                                            readControl();
-                                            System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
                                         }
+                                        // get
+                                        else if (command.equals("get")) {
+                                            String ftpCMD = "RETR " + inputWords[1];
+                                            System.out.println("--> " + ftpCMD);
+                                            controlWriter.write("RETR " + inputWords[1] + "\r\n");
+                                            controlWriter.flush();
+
+                                            try {
+                                                BufferedInputStream inputBuffer = new BufferedInputStream(dataConnection.getInputStream());
+                                                BufferedOutputStream outputBuffer = null;
+                                                byte[] allBytes = inputBuffer.readAllBytes();
+
+                                                while ((fromServer = controlReader.readLine()) != null) {
+                                                    System.out.println("<-- " + fromServer);
+
+                                                    if (allBytes != null) {
+                                                        outputBuffer = new BufferedOutputStream(new FileOutputStream(new File(inputWords[1])));
+                                                        outputBuffer.write(allBytes);
+                                                    }
+
+                                                    if (fromServer.startsWith("226")) break;
+                                                }
+                                                inputBuffer.close();
+                                                if (outputBuffer != null) {
+                                                    outputBuffer.close();
+                                                }
+                                            } catch (IOException exception) {
+                                                readControl();
+                                                System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
+                                            }
+                                        }
+                                    } catch (IOException exception) {
+                                        readControl();
+                                        System.err.println("0x3A7 Data transfer connection I/O error, closing data connection.");
+                                        dataReader.close();
+                                        dataConnection.close();
+                                        continue;
                                     }
-                                } catch (IOException exception) {
-                                    readControl();
-                                    System.err.println("0x3A7 Data transfer connection I/O error, closing data connection.");
-                                    dataReader.close();
-                                    dataConnection.close();
-                                    continue;
                                 }
                             }
 

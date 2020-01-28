@@ -71,7 +71,7 @@ public class CSftp {
         }
     }
 
-    // Create control Connection socket
+    // Create control connection socket
     private static void connectControl(String hostName, int portNumber) {
         try {
             controlConnection = new Socket(hostName, portNumber);
@@ -84,6 +84,7 @@ public class CSftp {
         }
     }
 
+    // Create data transfer connection socket
     private static void connectDataTransfer(String hostName, int portNumber) {
         try {
             dataConnection = new Socket(hostName, portNumber);
@@ -95,11 +96,7 @@ public class CSftp {
     }
 
     public static void main(String[] args) {
-        byte cmdString[] = new byte[MAX_LEN];
 
-        // Get command line arguments and connected to FTP
-        // If the arguments are invalid or there aren't enough of them
-        // then exit.
         if (args.length <= 0 || args.length > 2) {
             System.out.print("Usage: cmd ServerAddress ServerPort\n");
             return;
@@ -118,11 +115,7 @@ public class CSftp {
 
             for (int len = 1; len > 0; ) {
                 System.out.print("csftp> ");
-                /*len = System.in.read(cmdString);
-                if (len <= 0)
-                    break;*/
 
-                // Start processing the command here.
                 String input = null;
                 String[] inputWords = null;
                 try {
@@ -217,7 +210,7 @@ public class CSftp {
                             controlWriter.flush();
                             System.out.println("<-- " + controlReader.readLine());
 
-                            // for get:
+                            // for dir and get to create data transfer connection socket
                             if (fromServer.contains("227")) {
                                 String IP_Address = fromServer.split("[\\(\\)]")[1];
                                 String[] nums = IP_Address.split(",");
@@ -228,6 +221,7 @@ public class CSftp {
                                 try {
                                     connectDataTransfer(hostNameB, portNumberB);
 
+                                    // dir
                                     if (command.equals("dir")) {
                                         System.out.println("--> " + "LIST");
                                         controlWriter.write("LIST\r\n");
@@ -243,7 +237,9 @@ public class CSftp {
 
                                             if (fromServer.startsWith("226")) break;
                                         }
-                                    } else if (command.equals("get")) {
+                                    }
+                                    // get
+                                    else if (command.equals("get")) {
                                         String ftpCMD = "RETR " + inputWords[1];
                                         System.out.println("--> " + ftpCMD);
                                         controlWriter.write("RETR " + inputWords[1] + "\r\n");

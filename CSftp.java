@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
 //
 // This is an implementation of a simplified version of a command 
@@ -51,7 +53,7 @@ public class CSftp {
                 char[] toCharArray = fromServer.toCharArray();
                 if (toCharArray[3] == ' ') break;
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println("0xFFFD Control connection I/O error, closing control connection.");
             System.exit(1);
         }
@@ -76,7 +78,13 @@ public class CSftp {
             controlConnection.setSoTimeout(20000);
             controlWriter = new PrintWriter(controlConnection.getOutputStream(), true);
             controlReader = new BufferedReader(new InputStreamReader(controlConnection.getInputStream()));
-        } catch (Exception e) {
+        } catch (SocketTimeoutException e) {
+            System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
+            System.exit(1);
+        } catch (UnknownHostException e) {
+            System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
+            System.exit(1);
+        } catch (IOException e) {
             System.out.println("0xFFFC Control connection to " + hostName + " on port " + portNumber + " failed to open.");
             System.exit(1);
         }
@@ -88,7 +96,11 @@ public class CSftp {
             dataConnection = new Socket(hostName, portNumber);
             dataConnection.setSoTimeout(10000);
             dataReader = new BufferedReader(new InputStreamReader(dataConnection.getInputStream()));
-        } catch (Exception e) {
+        } catch (SocketTimeoutException e) {
+            System.out.println("0x3A2 Data transfer connection to " + hostName + " on port" + portNumber + " failed to open");
+        } catch (UnknownHostException e) {
+            System.out.println("0x3A2 Data transfer connection to " + hostName + " on port" + portNumber + " failed to open");
+        } catch (IOException e) {
             System.out.println("0x3A2 Data transfer connection to " + hostName + " on port" + portNumber + " failed to open");
         }
     }
@@ -269,7 +281,7 @@ public class CSftp {
                                             System.err.println("0x38E Access to local file " + inputWords[1] + " denied.");
                                         }
                                     }
-                                } catch (Exception e) {
+                                } catch (IOException e) {
                                     readControl();
                                     System.err.println("0x3A7 Data transfer connection I/O error, closing data connection.");
                                     dataReader.close();

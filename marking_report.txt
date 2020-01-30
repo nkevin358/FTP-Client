@@ -1,0 +1,94 @@
+Total before late penalty: [/57]
+
+NOTE: in the marking report something left blank (e.g. [/6]) typically means
+that you got full marks for that item. 
+
+Bonus                                                           [/3]
+
+CLIENT - FUNCTIONALITY:                                         [/48]
+
+0. Working makefile produces the CSftp.jar file                 [/2]
+  
+1. Command Argument processing                                  [/8]
+    - Commands terminated with carriage return + line feed  (4)
+    - Accepts server names in both IP and 
+       domain name format
+    - Processes port number and uses it
+    - Reports usage error if too many or too few arguments
+    - If control connection fails to open reports error 0xFFFC
+
+2. Features                                                     [/2]
+     - reports error 002 if any arguments
+     - sends the FEAT command (assuming the control connection is open)
+     - prints the response(s) and re-prompts when all of the
+       response has been printed
+
+3. User command                                                 [/3]
+     - reports error 002 if too many or too few parameters
+     - Sends USER command to server
+     - Processes response 
+
+4. pw command                                                   [/3]
+     - reports error 002 if too many or too few parameters
+     - Sends PASS command to server
+     - Processes response 
+
+5. quit command                                                 [/2]
+     - Sends QUIT on the control connection.
+     - Exits, ideally closing connections first
+
+6. cd command                                                   [/3]
+     - reports error 0x002 if too many or too few parameters
+     - sends CWD command 
+     - processes the response
+
+7. get command                                                  [/9]
+    - command rejected with 0x002 error if improper number of arguments
+    - Sends PASV and opens connection specified in response
+    - System designed to ensure server is in binary mode
+    - Can handle error response or connection failure
+    - Sends RETR and can deal with 
+      - failure on remote side
+        (should close the data connection)
+      - local file open failure
+      - unexpected closure of data channel
+    - actual transfer of file data
+    - binary files are properly transferred
+
+8. dir command                                                  [/5]
+    - Sends PASV and opens connection specified in response
+    - Can handle error response or connection failure
+    - Sends LIST and can deal with  (2)
+      - failure on remote side
+        (should close the data connection)
+      - unexpected closure of data channel
+    - actual transfer of directory listing is correct
+
+9. Format of output conforms to that specified in assignment    [/4]
+   - in particular lines are identified with --> and <--
+   - Only data from the control connection prints the <--, printed
+     data on the data connection does not contain <-- 
+   - the contents of the data connection are only printed for the dir 
+     command, get and put do not print what is sent or 
+     received on the data connection. 
+
+10. Error processing                                            [/5]
+   - handles unexpected closure of control connection
+   - handles unexpected EOF when reading command lines
+   - handles access to local file denied 
+   - handles invalid command error 
+   - data transfer connection failed to open
+
+11. Parameters: properly handles multiple spaces or tabs        [/2]
+
+---------------------
+Broad Marking Criteria :                                        [/9] 
+
+     Readability                                                [/3]
+     Code Documentation                                         [/3]
+     Code Quality                                               [/3]
+   
+
+MARKER'S ADDITIONAL COMMENTS:
+
+----------- Non Functional Criteria

@@ -1,4 +1,4 @@
-Total before late penalty: [/57]
+Total before late penalty: [56/57]
 
 NOTE: in the marking report something left blank (e.g. [/6]) typically means
 that you got full marks for that item. 
@@ -72,22 +72,30 @@ CLIENT - FUNCTIONALITY:                                         [/48]
      command, get and put do not print what is sent or 
      received on the data connection. 
 
-10. Error processing                                            [/5]
+10. Error processing                                            [4/5]
    - handles unexpected closure of control connection
    - handles unexpected EOF when reading command lines
    - handles access to local file denied 
    - handles invalid command error 
    - data transfer connection failed to open
 
-11. Parameters: properly handles multiple spaces or tabs        [/2]
+   -1 Does not handle control connection errors.
+
+11. Parameters: properly handles multiple spaces or tabs        [1/2]
+
+   -1 Does not handle leading spaces.
 
 ---------------------
 Broad Marking Criteria :                                        [/9] 
 
-     Readability                                                [/3]
+     Readability                                                [2/3]
      Code Documentation                                         [/3]
-     Code Quality                                               [/3]
+     Code Quality                                               [2/3]
    
+   -1 Hugh main function. Should separated into more helpers.
+   -1 Better not to use readAllBytes() when transferring the binary file.
+      Think about the case where the user downloads a really big file, say 4GB.
+
 
 MARKER'S ADDITIONAL COMMENTS:
 
